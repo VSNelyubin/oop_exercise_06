@@ -162,74 +162,61 @@ public:
     }
 };
 
-/*
-template<class T>
-class retardallocator{
-public:
-
-	typedef size_t     size_type;
-      typedef ptrdiff_t  difference_type;
-      typedef T*       pointer;
-      typedef const T* const_pointer;
-      typedef T&       reference;
-      typedef const T& const_reference;
-      typedef T        value_type;
-
-
-	value_type T;
-	pointer T*;
-	const_pointer const T*;
-	reference T&;
-	const_reference const T&;
-	size_type std::size_t
-	difference_type std::ptrdiff_t;
-	propagate_on_container_move_assignment std::true_type;
-	rebind template< class U > struct rebind { typedef allocator<U> other; };
-	is_always_equal std::true_type;
-
-
-
-
-
-
-
-
-	retardallocator<T>();
-	~retardallocator();
-	pointer address( reference x ) const;
-	const_pointer address( const_reference x ) const;
-};
-*/
-
-template <class T, size_t maxdata>
-class mylloc {
+template <class T,size_t maxdata>
+class mylloc{
 private:
-    T* data;
-    int size;
-
+	T*data;
+	int size;
+	int curpos;
+	int fir;
+	int*nxt;
 public:
-    mylloc<T, maxdata>()
-    {
-        data = new T[maxdata]; //(T*)malloc(sizeof(T)*maxdata);
-        size = 0;
-    }
-    T* operator[](int pos)
-    {
-        if (pos > size) {
-            printf("err %d\n", pos);
-            return nullptr;
-        }
-        return &data[pos];
-    }
-    void expand(int ni)
-    {
-        if (ni > maxdata) {
-            size = maxdata;
-        }
-        else {
-            size = ni;
-        }
-    }
+	mylloc<T,maxdata>(){
+		data=new T[maxdata];//(T*)malloc(sizeof(T)*maxdata);
+		size=0;
+		curpos=0;
+		nxt=new int[maxdata];
+		for(int i=0;i<maxdata;i++){
+			nxt[i]=-1;
+		}
+		fir=0;
+	}
+	T* operator [](int pos){
+		if(pos>size){
+printf("err %d\n",pos);
+			return nullptr;
+		}
+		curpos=fir;
+		for(int i=0;i<pos;i++){
+			curpos=nxt[curpos];
+		}
+		return &data[curpos];
+	}
+
+	int ffe(){
+		for(int i=0;i<maxdata;i++){
+			if((nxt[i]==-1)&&(i!=curpos)){
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
+	void expand(int ni){
+		int nsize;
+		if(ni>maxdata){
+			nsize=maxdata;
+		}
+		else{
+			nsize=ni;
+		}
+		while(nxt[curpos]!=-1){curpos=nxt[curpos];}
+		for(size;size<nsize;size++){
+			nxt[curpos]=this->ffe();
+			curpos=nxt[curpos];
+		}
+	}
 };
 
 const int MAXS = 32;
